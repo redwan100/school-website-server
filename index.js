@@ -326,12 +326,10 @@ async function run() {
     // TODO: STUDENT
     app.post("/add-result", upload.single("image"), async (req, res) => {
       try {
-        const image = req.file ? req.file.filename : null;
-        console.log(image);
         const body = req.body;
         const info = {
           ...body,
-          avatar: image,
+          createdAt: new Date(),
         };
         const result = await resultCollection.insertOne(info);
 
@@ -390,8 +388,6 @@ async function run() {
       try {
         const id = req.params.id;
         const updated = req.body;
-
-        console.log(updated);
 
         // Remove undefined or empty string values from the updated object
         Object.keys(updated).forEach((key) =>
