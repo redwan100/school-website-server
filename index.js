@@ -43,6 +43,8 @@ async function run() {
       .collection("students");
 
     const aboutCollection = client.db("school-website").collection("about");
+
+    const resultCollection = client.db("school-website").collection("results");
     /* -------------------------------------------------------------------------- */
     /*                          FILE UPLOAD FUNCTIONALITY                         */
     /* -------------------------------------------------------------------------- */
@@ -212,6 +214,17 @@ async function run() {
       }
     });
 
+    app.delete("/delete-gallery/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const result = await galleryCollection.deleteOne(filter);
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+        res.send("There was a server side error");
+      }
+    });
 
     /* -------------------------------------------------------------------------- */
     /*                               STUDENT ROUTES                               */
@@ -301,6 +314,100 @@ async function run() {
         };
 
         const result = await studentCollection.updateOne(filter, updateDoc);
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+      }
+    });
+
+    /* -------------------------------------------------------------------------- */
+    /*                               EXAM RESULT ROUTES                               */
+    /* -------------------------------------------------------------------------- */
+    // TODO: STUDENT
+    app.post("/add-result", upload.single("image"), async (req, res) => {
+      try {
+        const image = req.file ? req.file.filename : null;
+        console.log(image);
+        const body = req.body;
+        const info = {
+          ...body,
+          avatar: image,
+        };
+        const result = await resultCollection.insertOne(info);
+
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+        res.send({
+          error: true,
+          message: "There was a server side error",
+        });
+      }
+    });
+
+    app.get("/all-result", async (req, res) => {
+      try {
+        const result = await resultCollection
+          .find()
+          .sort({ createdAt: -1 })
+          .toArray();
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+        res.send("There was a server side error");
+      }
+    });
+
+    // TODO: GET SINGLE student ROUTE
+    app.get("/single-result/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await resultCollection.findOne(query);
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+        res.send("There was a server side error");
+      }
+    });
+
+    // TODO: DELETE student ROUTE
+    app.delete("/delete-result/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+
+        const result = await resultCollection.deleteOne(query);
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+        res.send("There was a server side error");
+      }
+    });
+
+    // TODO: UPDATE student INFO ROUTE
+    app.patch("/update-result/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const updated = req.body;
+
+        console.log(updated);
+
+        // Remove undefined or empty string values from the updated object
+        Object.keys(updated).forEach((key) =>
+          updated[key] === undefined || updated[key] === ""
+            ? delete updated[key]
+            : null
+        );
+
+        const filter = { _id: new ObjectId(id) };
+        const updateDoc = {
+          $set: {
+            ...updated,
+          },
+        };
+
+        const result = await resultCollection.updateOne(filter, updateDoc);
         res.send(result);
       } catch (error) {
         console.log(error);
