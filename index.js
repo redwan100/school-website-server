@@ -179,6 +179,34 @@ async function run() {
     /* -------------------------------------------------------------------------- */
     /*                               GALLERY ROUTES                               */
     /* -------------------------------------------------------------------------- */
+
+    app.get("/all-gallery", async (req, res) => {
+      const aggregationPipeline = [
+        {
+          $unwind: "$image", // Flatten the 'images' array
+        },
+        {
+          $group: {
+            _id: null,
+            filenames: { $push: "$image.filename" }, // Collect 'filename' values into an array
+          },
+        },
+        {
+          $project: { _id: 0, filenames: 1 }, // Exclude _id and include only 'filenames'
+        },
+      ];
+
+      const result = await galleryCollection
+        .aggregate(aggregationPipeline)
+        .toArray();
+
+      if (result.length > 0) {
+        res.json(result[0].filenames); // Return the 'filenames' array
+      } else {
+        res.json([]); // Return an empty array if no documents were found
+      }
+    });
+
     // TODO: ADD  GALLERY
     app.post("/add-gallery", upload.array("images"), async (req, res) => {
       try {
