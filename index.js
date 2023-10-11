@@ -46,7 +46,13 @@ async function run() {
 
     const resultCollection = client.db("school-website").collection("results");
 
-    const trainingCollection = client.db("school-website").collection("trainings");
+    const trainingCollection = client
+      .db("school-website")
+      .collection("trainings");
+
+    const teachersCollection = client
+      .db("school-website")
+      .collection("teachers");
 
     /* -------------------------------------------------------------------------- */
     /*                          FILE UPLOAD FUNCTIONALITY                         */
@@ -78,6 +84,101 @@ async function run() {
         files: 30,
       },
     });
+
+    /* -------------------------------------------------------------------------- */
+    /*                               TEACHER ROUTES                               */
+    /* -------------------------------------------------------------------------- */
+    //TODO: ADD TEACHER INFORMATION ROUTE
+    app.post("/teacherInfo", upload.single("image"), async (req, res) => {
+      try {
+        const { filename } = req.file;
+        if (!req.file) {
+          return res.send("File Not found ");
+        }
+        const teachers = req.body;
+        const result = await teachersCollection.insertOne({
+          ...teachers,
+          image: filename ? filename : "",
+        });
+
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+      }
+    });
+
+    // TODO: GET ALL TEACHER ROUTE
+    app.get("/all-teachers", async (req, res) => {
+      try {
+        const result = await teachersCollection
+          .find()
+          .sort({ createdAt: -1 })
+          .toArray();
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+        res.send("There was a server side error");
+      }
+    });
+
+    // TODO: GET SINGLE TEACHER ROUTE
+    app.get("/single-teacher/:id", async (req, res) => {
+      console.log(req.params.id);
+      try {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await teachersCollection.findOne(query);
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+        res.send("There was a server side error");
+      }
+    });
+
+    // TODO: DELETE TEACHER ROUTE
+    app.delete("/delete-teacher/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+
+        const result = await teachersCollection.deleteOne(query);
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+        res.send("There was a server side error");
+      }
+    });
+
+    // TODO: UPDATE TEACHER INFO ROUTE
+    app.patch(
+      "/update-teacherinformation/:id",
+      upload.single("image"),
+      async (req, res) => {
+        try {
+          const id = req.params.id;
+          const updated = req.body;
+
+          // Remove undefined or empty string values from the updated object
+          Object.keys(updated).forEach((key) =>
+            updated[key] === undefined || updated[key] === ""
+              ? delete updated[key]
+              : null
+          );
+
+          const filter = { _id: new ObjectId(id) };
+          const updateDoc = {
+            $set: {
+              ...updated,
+            },
+          };
+
+          const result = await teachersCollection.updateOne(filter, updateDoc);
+          res.send(result);
+        } catch (error) {
+          console.log(error);
+        }
+      }
+    );
 
     /* -------------------------------------------------------------------------- */
     /*                                NOTICE ROUTES                               */
