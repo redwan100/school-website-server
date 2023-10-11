@@ -45,6 +45,9 @@ async function run() {
     const aboutCollection = client.db("school-website").collection("about");
 
     const resultCollection = client.db("school-website").collection("results");
+
+    const trainingCollection = client.db("school-website").collection("trainings");
+
     /* -------------------------------------------------------------------------- */
     /*                          FILE UPLOAD FUNCTIONALITY                         */
     /* -------------------------------------------------------------------------- */
@@ -498,7 +501,7 @@ async function run() {
       try {
         const result = await aboutCollection
           .find()
-          .sort({ createdAt: -1 })
+          .sort({ createdAt: 1 })
           .toArray();
         res.send(result);
       } catch (error) {
@@ -615,6 +618,100 @@ async function run() {
       } catch (error) {
         console.log(error);
         res.send("There was a server side error");
+      }
+    });
+
+    /* -------------------------------------------------------------------------- */
+    /*                               TRAINING ROUTES                               */
+    /* -------------------------------------------------------------------------- */
+    // TODO: TRAINING
+    app.post("/add-training", upload.single("image"), async (req, res) => {
+      try {
+        const image = req.file ? req.file.filename : null;
+        console.log(image);
+        const body = req.body;
+        const info = {
+          ...body,
+          avatar: image,
+        };
+        const result = await trainingCollection.insertOne(info);
+
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+        res.send({
+          error: true,
+          message: "There was a server side error",
+        });
+      }
+    });
+
+    app.get("/all-training", async (req, res) => {
+      try {
+        const result = await trainingCollection
+          .find()
+          .sort({ createdAt: -1 })
+          .toArray();
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+        res.send("There was a server side error");
+      }
+    });
+
+    // TODO: GET SINGLE student ROUTE
+    app.get("/single-training/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await trainingCollection.findOne(query);
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+        res.send("There was a server side error");
+      }
+    });
+
+    // TODO: DELETE student ROUTE
+    app.delete("/delete-training/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+
+        const result = await trainingCollection.deleteOne(query);
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+        res.send("There was a server side error");
+      }
+    });
+
+    // TODO: UPDATE student INFO ROUTE
+    app.patch("/update-training/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const updated = req.body;
+
+        console.log(updated);
+
+        // Remove undefined or empty string values from the updated object
+        Object.keys(updated).forEach((key) =>
+          updated[key] === undefined || updated[key] === ""
+            ? delete updated[key]
+            : null
+        );
+
+        const filter = { _id: new ObjectId(id) };
+        const updateDoc = {
+          $set: {
+            ...updated,
+          },
+        };
+
+        const result = await trainingCollection.updateOne(filter, updateDoc);
+        res.send(result);
+      } catch (error) {
+        console.log(error);
       }
     });
 
