@@ -54,6 +54,10 @@ async function run() {
       .db("school-website")
       .collection("teachers");
 
+    const schoolInformationCollection = client
+      .db("school-website")
+      .collection("school-information");
+
     /* -------------------------------------------------------------------------- */
     /*                          FILE UPLOAD FUNCTIONALITY                         */
     /* -------------------------------------------------------------------------- */
@@ -89,7 +93,7 @@ async function run() {
     /*                               TEACHER ROUTES                               */
     /* -------------------------------------------------------------------------- */
     //TODO: ADD TEACHER INFORMATION ROUTE
-    app.post("/teacherInfo", upload.single("image"), async (req, res) => {
+    app.post("/add-teacher", upload.single("image"), async (req, res) => {
       try {
         const { filename } = req.file;
         if (!req.file) {
@@ -108,7 +112,7 @@ async function run() {
     });
 
     // TODO: GET ALL TEACHER ROUTE
-    app.get("/all-teachers", async (req, res) => {
+    app.get("/all-teacher", async (req, res) => {
       try {
         const result = await teachersCollection
           .find()
@@ -151,12 +155,13 @@ async function run() {
 
     // TODO: UPDATE TEACHER INFO ROUTE
     app.patch(
-      "/update-teacherinformation/:id",
-      upload.single("image"),
+      "/update-teacher/:id",
+
       async (req, res) => {
         try {
           const id = req.params.id;
           const updated = req.body;
+          console.log(updated, id);
 
           // Remove undefined or empty string values from the updated object
           Object.keys(updated).forEach((key) =>
@@ -793,8 +798,6 @@ async function run() {
         const id = req.params.id;
         const updated = req.body;
 
-        console.log(updated);
-
         // Remove undefined or empty string values from the updated object
         Object.keys(updated).forEach((key) =>
           updated[key] === undefined || updated[key] === ""
@@ -815,6 +818,110 @@ async function run() {
         console.log(error);
       }
     });
+
+    /* -------------------------------------------------------------------------- */
+    /*                            TODO: SCHOOL INFORMATION                             */
+    /* -------------------------------------------------------------------------- */
+
+    //TODO: ADD SCHOOL INFORMATION ROUTE
+    app.post(
+      "/add-school-information",
+      upload.single("logo"),
+      async (req, res) => {
+        try {
+          const { filename } = req.file;
+          if (!req.file) {
+            return res.send("File Not found ");
+          }
+          const schoolInfo = req.body;
+          const result = await schoolInformationCollection.insertOne({
+            ...schoolInfo,
+            image: filename ? filename : "",
+          });
+
+          res.send(result);
+        } catch (error) {
+          console.log(error);
+        }
+      }
+    );
+
+    // TODO: GET ALL SCHOOL INFORMATION ROUTE
+    app.get("/all-school-information", async (req, res) => {
+      try {
+        const result = await schoolInformationCollection
+          .find()
+          .sort({ createdAt: -1 })
+
+          .toArray();
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+        res.send("There was a server side error");
+      }
+    });
+
+    // TODO: GET SINGLE SCHOOL INFORMATION ROUTE
+    app.get("/single-school-information/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await schoolInformationCollection.findOne(query);
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+        res.send("There was a server side error");
+      }
+    });
+
+    // TODO: DELETE SCHOOL INFORMATION ROUTE
+    app.delete("/delete-school-information/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        console.log({ id });
+        const query = { _id: new ObjectId(id) };
+
+        const result = await schoolInformationCollection.deleteOne(query);
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+        res.send("There was a server side error");
+      }
+    });
+
+    // TODO: UPDATE SCHOOL INFORMATION INFO ROUTE
+    app.patch(
+      "/update-school-information/:id",
+      upload.single("image"),
+      async (req, res) => {
+        try {
+          const id = req.params.id;
+          const updated = req.body;
+
+          // Remove undefined or empty string values from the updated object
+          Object.keys(updated).forEach((key) =>
+            updated[key] === undefined || updated[key] === ""
+              ? delete updated[key]
+              : null
+          );
+
+          const filter = { _id: new ObjectId(id) };
+          const updateDoc = {
+            $set: {
+              ...updated,
+            },
+          };
+
+          const result = await schoolInformationCollection.updateOne(
+            filter,
+            updateDoc
+          );
+          res.send(result);
+        } catch (error) {
+          console.log(error);
+        }
+      }
+    );
 
     await client.connect();
     // Send a ping to confirm a successful connection
