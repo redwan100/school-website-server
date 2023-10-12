@@ -370,7 +370,7 @@ async function run() {
     app.post("/add-student", upload.single("image"), async (req, res) => {
       try {
         const image = req.file ? req.file.filename : null;
-        console.log(image);
+
         const body = req.body;
         const info = {
           ...body,
