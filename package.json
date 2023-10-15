@@ -13,5 +13,11 @@
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
-  }
+  },
+  "name": "server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/redwan100/school-website-server.git",
+  "author": "Redwan islam <redwanislam2760@gmail.com>",
+  "license": "MIT"
 }
